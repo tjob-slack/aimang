@@ -1,0 +1,97 @@
+@import './variables.scss';
+@import './mixin.scss';
+@import './transition.scss';
+@import './element-ui.scss';
+@import './sidebar.scss';
+
+body {
+  height: 100%;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  font-family: Helvetica Neue, Helvetica, PingFang SC, Hiragino Sans GB, Microsoft YaHei, Arial, sans-serif;
+}
+
+label {
+  font-weight: 700;
+}
+
+html {
+  height: 100%;
+  box-sizing: border-box;
+}
+
+#app {
+  height: 100%;
+}
+
+*,
+*:before,
+*:after {
+  box-sizing: inherit;
+}
+
+a:focus,
+a:active {
+  outline: none;
+}
+
+a,
+a:focus,
+a:hover {
+  cursor: pointer;
+  color: inherit;
+  text-decoration: none;
+}
+
+div:focus {
+  outline: none;
+}
+
+.clearfix {
+  &:after {
+    visibility: hidden;
+    display: block;
+    font-size: 0;
+    content: " ";
+    clear: both;
+    height: 0;
+  }
+}
+
+// main-container global css
+.app-container {
+  padding: 20px;
+}
+
+//2020-4-8 by tjob from aimang 
+
+/* 列表样式 */
+.page-title {
+	height: 50px;
+	line-height: 50px;
+	font-size: 18px;
+	font-weight: 700;
+}
+
+.operator-form {
+	background-color: #fff;
+	padding: 10px 10px;
+}
+
+.table-operator-container {
+	background-color: #fff;
+	margin-top: 10px;
+	padding: 0 15px;
+}
+
+.data-list-title {
+	font-size: 15px;
+	line-height: 40px;
+	font-weight: 700;
+	color: #666;
+	padding-top: 6px;
+}
+.table-container {
+	border: 1px solid #e2e1e1;
+}
