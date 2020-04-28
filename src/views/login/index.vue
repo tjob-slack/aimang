@@ -65,6 +65,7 @@
 <script>
 import md5 from "js-md5";
 import { login,login1 } from "@/api/test.js";
+//import { login,login5 } from "@/api/api.js";
 
 export default {
   name: "Login",
@@ -142,21 +143,18 @@ export default {
           password: that.loginForm.password
       };
 
-      console.log('this.setData',data),
+      console.log('this.setData',data)
 
+      
       login(data)
       .then(
-        
-        res => {
-          console.log("login.index.res:", res);
-          this.$router.push(this.redirect)  
+        res=>{
+          console.log("view.login.res:", res);
         },
-        err => {
-          console.log("err :", err);
-          this.passwordError = true;
-          this.loading = false;
+        err=>{
+          console.log("view.login.err:", err);
         }
-      );
+      )
     }
   }
 };

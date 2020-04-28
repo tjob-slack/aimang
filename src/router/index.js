@@ -33,6 +33,7 @@ import Layout from '@/layout'
 export const constantRoutes = [{
     path: '/login',
     component: () => import('@/views/login/index'),
+    //component: () => import('@/views/cloudBase/index'),
     hidden: true
   },
 
@@ -40,6 +41,25 @@ export const constantRoutes = [{
     path: '/404',
     component: () => import('@/views/404'),
     hidden: true
+  },
+  // toDo
+  {
+    path: '/',
+    component: Layout,
+    redirect: '/toDoList',
+    meta: {
+      title: '待办任务',
+      icon: 'plane'
+    },
+    children: [{
+        path: 'toDoList',
+        name: 'toDoList',
+        component: () => import('@/views/toDo/toDoList'),
+        meta: {
+          title: '待办任务',
+        }
+      },
+    ]
   },
   // 素材管理
   {
@@ -84,6 +104,7 @@ export const constantRoutes = [{
       },
     ]
   }
+  //doctorOrder
   ,{
     path: '/doctorOrder',
     component: Layout,
@@ -101,15 +122,9 @@ export const constantRoutes = [{
         title: '预约申请', icon:'plane' //配置选项可配置测试名称和图标
       }
     }
-    ,{
-      path: 'doctorOrderModify',  // 二级路径
-      name: '审核预约申请',
-      component: () => import('@/views/doctorOrder/doctorOrderModify'), // 懒加载，此处写所添加文件的路径
-      meta: {
-        title: '预约审核', icon:'plane' //配置选项可配置测试名称和图标
-      }
-    }]
+    ]
   } 
+  //medicalOrder
   ,{
     path: '/medicalOrder',
     component: Layout,
@@ -127,18 +142,11 @@ export const constantRoutes = [{
         title: '购药申请', icon:'plane' //配置选项可配置测试名称和图标
       }
     }
-    ,{
-      path: 'medicalOrderModify',  // 二级路径
-      name: '审核购药申请',
-      component: () => import('@/views/medicalOrder/medicalOrderModify'), // 懒加载，此处写所添加文件的路径
-      meta: {
-        title: '购药审核', icon:'plane' //配置选项可配置测试名称和图标
-      }
-    }]
+    ]
   } 
- //测试页面
+ //news
   ,{
-	  path: '/',  //url路径
+	  path: '/news',  //url路径
     component: Layout, // 此处不用动，这个全局统一的一个布局文件
     redirect: '/news-list',
     meta: {
@@ -162,17 +170,114 @@ export const constantRoutes = [{
         title: '发布新闻', icon:'plane'
       }
     }
-    ,{
-      path: 'quill-editor',
-      name: '编辑新闻',
-      component: () => import('@/views/news/quill-editor'),
-      meta: {
-        title: '编辑新闻', icon:'plane'
-      }
-    }, 
+    
     ]
   },
- 
+  //vuetifyDemo
+  {
+    path: '/vuetifyDemo',
+    component: Layout,
+    redirect: 'fullCalendar',
+    meta: {
+      title: 'vuetifyDemo-card',
+      icon: 'plane'
+    },
+    
+	  children: [
+      {
+        path: '/fullCalendar',  //url路径
+        component: Layout, // 此处不用动，这个全局统一的一个布局文件
+        component: () => import('@/views/fullCalendar/index'),
+        meta: {
+          title: 'fullCalendar',
+          icon: 'plane'
+        }
+      },
+      {
+      path: '/card',  //url路径
+      component: Layout, // 此处不用动，这个全局统一的一个布局文件
+      component: () => import('@/views/vuetifyDemo/card'),
+      meta: {
+        title: 'vuetifyDemo card',
+        icon: 'plane'
+      }
+      }
+      ,{ path: '/calendar',  //url路径
+      component: Layout, // 此处不用动，这个全局统一的一个布局文件
+      component: () => import('@/views/vuetifyDemo/calendar'),
+      meta: {
+        title: 'vuetifyDemo canlendar',
+        icon: 'plane'
+      }
+      }
+      ,{ path: '/dialog',  //url路径
+      component: Layout, // 此处不用动，这个全局统一的一个布局文件
+      component: () => import('@/views/vuetifyDemo/dialog'),
+      meta: {
+        title: 'Elemedialog',
+        icon: 'plane'
+      }}
+      ,{ path: '/weekly',  //url路径
+      component: Layout, // 此处不用动，这个全局统一的一个布局文件
+      component: () => import('@/views/vuetifyDemo/weekly'),
+      meta: {
+        title: 'weekly',
+        icon: 'plane'
+      }}
+      ,{ path: '/formCreate',  //url路径
+      component: Layout, // 此处不用动，这个全局统一的一个布局文件
+      component: () => import('@/views/vuetifyDemo/formCreate'),
+      meta: {
+        title: 'formCreate',
+        icon: 'plane'
+      }}
+      ,{ path: '/vue-form-maker',  //url路径
+      component: Layout, // 此处不用动，这个全局统一的一个布局文件
+      component: () => import('@/views/vuetifyDemo/vue-form-maker'),
+      meta: {
+        title: 'vue-form-maker',
+        icon: 'plane'
+      }}
+    ]
+  }
+  //checkIn
+  ,{
+    path: '/checkIn',
+    component: Layout,
+    redirect: '/checkIn',
+    meta: {
+      title: '预检分诊',
+      icon: 'plane'
+    },
+    children: [{
+      path: '/checkIn',  //url路径
+      component: Layout, // 此处不用动，这个全局统一的一个布局文件
+      component: () => import('@/views/checkIn/index'),
+      meta: {
+        title: '预检分诊',
+        icon: 'plane'
+      }
+    }]
+  }
+  //familyCheck
+  ,{
+    path: '/familyCheck',
+    component: Layout,
+    redirect: '/familyCheck',
+    meta: {
+      title: '居家自测',
+      icon: 'plane'
+    },
+    children: [{
+      path: '/familyCheck',  //url路径
+      component: Layout, // 此处不用动，这个全局统一的一个布局文件
+      component: () => import('@/views/familyCheck/index'),
+      meta: {
+        title: '居家自测',
+        icon: 'plane'
+      }
+    }]
+  }
   // 404 page must be placed at the end !!!
   /**
   {

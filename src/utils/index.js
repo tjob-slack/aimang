@@ -133,3 +133,72 @@ export function randomString(randomLen, min, max){
   }
   return str;
 }
+
+
+
+
+export function transUrl(s){
+  //a=第一个个.之后， b=加第3个/之后
+  let t = Object.assign(s)
+  if (!t.imgFileid){
+    return t
+  }
+  var s = t.imgFileid
+  
+  var s = s.split(".").slice(1)
+  var s3 = s[0].split("/")
+  s3[0]="http://"  + s3[0] + ".tcb.qcloud.la"
+
+  var imgUrl = [s3.join("/") ,s.slice(1)].join(".")
+  
+  t.imgFileid = imgUrl
+
+  return t
+}
+
+export function formatString(s){
+  return s.split(',')
+}
+
+export function stringToString(s){
+/**
+      <el-table-column prop="medName" label="药物名称"></el-table-column>
+      <el-table-column prop="unit" label="单位"></el-table-column>
+      <el-table-column prop="count" label="数量"></el-table-column>
+       */
+      /**多条拼接字符串
+      a1, a2, a3
+      b1, b2, b3
+      c1, c2, c3
+      ==>
+      a1,b1,c1;
+      a2,b2,c2;
+      a3,b3,c3
+      */
+    
+    let t = Object.assign(s)
+    console.log('stringToString.t:',t)
+    
+    var flag = t.medName||'' && t.medName.indexOf(",") && 1  || t.unit||'' && t.unit.indexOf(",") && 2 ||  t.count||'' && t.count.indexOf(",")&& 3 
+    console.log('stringToString.flag:',flag)
+
+    if (!flag || flag<0) {
+      t.medNameList=[t.medName,t.unit,t.count].join(",") 
+      return t
+    }
+
+    let a = formatString(t.medName)
+    let b = formatString(t.count)
+    let c = formatString(t.unit)
+    
+    //需要换成动态长度 2020-4-14
+    var  x0=[a[0],b[0],c[0]].join("")
+    var  x1=[a[1],b[1],c[1]].join("")
+    var  x2=[a[2],b[2],c[2]].join("")
+
+
+    t.medNameList = [x0,x1,x2].join(",") 
+    
+    return t
+}
+

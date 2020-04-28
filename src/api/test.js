@@ -1,6 +1,6 @@
 import request from '@/utils/request'
 import axios from 'axios'
-import { randomString } from '@/utils/index'
+import { randomString,transUrl } from '@/utils/index'
 
 const account = {
   user: 'zhangyi'
@@ -47,7 +47,11 @@ export function getNews(params) {
   }).then(res => {
     console.log('getNews.get:',res.data.list)
     
-    return res.data.list
+    var respData = res.data.list.map(transUrl)  //云存储ID转Http链接 2020-4-11
+    
+
+    return respData
+
   })
   return resp
   }

@@ -1,51 +1,7 @@
 <template>
   <div id="app" v-cloak>
 	<div class="app-container">
-		<!-- 查询条件 -->
-		<div id="operatorForm" class="operator-form">
-			<el-form :inline="true">
-				<el-form-item label="订单状态" label-width="100"   >
-					<el-radio v-model="status" label="0" >初始</el-radio>
-          <el-radio v-model="status" label="1">审核通过</el-radio>
-          <el-radio v-model="status" label="2">拒绝请求</el-radio>
-          <el-radio v-model="status" label="3">用户下单</el-radio>
-					<el-radio v-model="status" label="5">待取药</el-radio>
-					<el-radio v-model="status" label="6">已完成</el-radio>
-				</el-form-item>
-				<el-form-item label="查询日期" label-width="100">
-					<!--el-date-picker
-							v-model="dateTime"
-							format= 'yyyy-MM-dd'
-							value-format="yyyy-MM-dd HH:mm:ss"
-							type="daterange"
-							range-separator="至"
-							start-placeholder="开始日期"
-							end-placeholder="结束日期">
-					</el-date-picker-->
-
-          <el-date-picker
-            
-            v-model="searchTime"
-            type="datetimerange"
-            :picker-options="pickerOptions"
-            range-separator="至"
-            start-placeholder="开始日期"
-            end-placeholder="结束日期"
-            align="right"
-          ></el-date-picker>
-          
-				</el-form-item>
-				<el-form-item label="用户姓名" label-width="100">
-					<el-input v-model="name" size="small" class="line-item" style="width: 100px" placeholder="请输入名称"></el-input>
-				</el-form-item>
-				<el-form-item label="证件号码" label-width="100">
-					<el-input v-model="idNumber" size="small" class="line-item" style="width: 100px" placeholder="请输入名称"></el-input>
-				</el-form-item>
-				<el-form-item>
-					<el-button @click="searchData" size="small" class="line-item" type="success">检索</el-button>
-				</el-form-item>
-			</el-form>
-		</div>
+	
 		<!-- 数据表格容器 -->
 		<div id="tableOperatorContainer" class="table-operator-container">
 			<!-- 数据表格操作列 -->
@@ -64,31 +20,10 @@
       style="width: 100%"
       :default-sort="{prop: 'createDate', order: 'descending'}"
     >
-      <el-table-column prop="timesolt1" label="第一时段" width="180"></el-table-column>
-      <el-table-column prop="timesolt2" label="第一时段" width="180"></el-table-column>
-      <el-table-column prop="timesolt3" label="第一时段" width="180"></el-table-column>
-      <el-table-column prop="timesolt4" label="第一时段" width="180"></el-table-column>
-      <el-table-column prop="timesolt5" label="第一时段" width="180"></el-table-column>
-      <el-table-column prop="timesolt6" label="第一时段" width="180"></el-table-column>
-      <el-table-column prop="timesolt7" label="第一时段" width="180"></el-table-column>
-      
-      
-      
-      
-      <el-table-column label="操作" width="300" align="middle">
-        <div slot-scope="scope">
-          <el-button @click="putMedicalOrder(scope.row.orderNo,0)" size="mini" type="danger" >删除</el-button>
-          <el-button @click="handleEdit(scope.row.orderNo,2)" size="mini" type="primary" >拒绝</el-button>
-          <el-button @click="handleEdit(scope.row.orderNo,1)" size="mini" type="primary" >通过</el-button>
-          <el-button @click="handleEdit(scope.row.orderNo,5)" size="mini" type="primary" >通知取药</el-button>
-          <!--el-button
-            @click="downloadFile(scope.row.name,scope.row.imgUrl)"
-            size="small"
-            type="primary"
-            round
-          >下载</el-button-->
-        </div>
-      </el-table-column>
+      <el-table-column prop="time.startTime" label="时段起" width="180"></el-table-column>
+      <el-table-column prop="time.endTime" label="时段止" width="180"></el-table-column>
+      <el-table-column prop="count" label="预约人数" width="180"></el-table-column>
+     
     </el-table>
     <el-pagination
       class="pagination"
