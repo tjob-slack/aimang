@@ -202,3 +202,17 @@ export function stringToString(s){
     return t
 }
 
+
+export async function getDate(dd){
+  const now = dd ? dd : new Date();
+  console.log('api.now:',now)
+  const year = now.getFullYear();
+  const month = now.getMonth() + 1;
+  const day = now.getDate();
+  const date = [year,month,day].join("-") ;
+
+  //const date = parseTime(now,'YYYY-MM-DD')
+  console.log('api.date:',date)
+  return date
+
+}

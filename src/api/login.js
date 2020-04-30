@@ -1,21 +1,21 @@
 import { parseTime,randomString } from '@/utils/index'
 
-const tcb = require('tcb-js-sdk')  //cloudbase
-const app = tcb.init({ 
-  /* 初始化... */ 
-  env: "tianshibot-test"
-
-})
-console.log('api.app:',app)
 /**
  * //local：在显式退出登录之前的 30 天内保留身份验证状态。
  *  session：在窗口关闭时清除身份验证状态。
  *  none：在页面重新加载时清除身份验证状态。
  */
+// 使用 Web 端 SDK
+const tcb = require('tcb-js-sdk')  //cloudbase
+console.log('api.api.tcb:',tcb)
+const app = tcb.init({ 
+  /* 初始化... */ 
+  env: "tianshibot-test"
+  ,_openid: 'ozVib5W5yhvFrhOaMQpScujkaR2U' //cloud.getWXContext(context).OPENIDI
+})
 
 
 
-const tcbDb = app.database()
 
 const COL_NAME = 'toDoList'
 
@@ -28,50 +28,6 @@ console.log('api.now:',now)
 
 const date = parseTime(new Date(),'YYYY-MM-DD')
 console.log('api.date:',date)
-
-//云函数查询
-export async function  login(params){  
-  console.log('api.login.params:',params)
-  const func="createTicket"
-
-  const ticket = await app.callFunction({
-    // 云函数名称
-    name: func,
-    // 传给云函数的参数
-    data:{
-      user: params.user
-      ,password: params.password
-    } 
-  })
-  .then(res => {
-    //console.log(res); // 输出 "3"
-    console.log('api.login:',res)
-    return res
-  })
-  .catch(error=>{
-    console.log('api.login.error:',error)
-  })
-  
-  console.log('api.login.ticket:',ticket)
-  if (!tichet){
-    return 
-  }
-  // 3. 登录 Cloudbase
-  //await auth.signInWithTicket(ticket);    
-  return await  app.auth({
-      persistence: "session"   
-    })
-    .customAuthProvider()
-    .signIn(ticket)
-    .then((res) => {
-      console.log('api.login.customAuth.res:',res)
-      // 登录成功
-    })
-    .catch(err => {
-      // 登录失败
-      console.log('api.login.customAuth.err:',err)
-  });
-}
 
 export function login5(params) {
   console.log('login params:',params) 
@@ -234,48 +190,97 @@ export async function login2(){
 
 }
 
-//云开发 登录鉴权
+
+//云开发 登录鉴权 匿名
 export async function login0(){
   //http://docs.cloudbase.net/authentication/anonymous.html#kai-tong-liu-cheng
-  await auth.signInAnonymously();
+  await app.auth().signInAnonymously();
   // 匿名登录成功检测登录状态isAnonymous字段为true
   const loginState = await app.auth().getLoginState();
   console.log('api.login:loginState.isAnonymous',loginState.isAnonymous); // true
   if(!loginState){
     // 以匿名登录为例
-    const loginState =  auth.anonymousAuthProvider(
+    const loginState =  app.auth().anonymousAuthProvider(
       { persistence: "local" }
       )      
       .signIn()
+    // 使用 refreshToken 的前 6 位作为 uid
+    //setUid(auth.hasLoginState().credential.refreshToken.slice(0, 6));
+    const uid = app.auth().hasLoginState().credential.refreshToken.slice(0, 6);
+    localStorage.setItem("uid", uid);
+  
     localStorage.setItem("hasLogin", true);
     console.log('cloundBase.index.loginState:',loginState); // true
     return loginState
-    }
+  }
 }
 
 
-//只能在vue文件中用this.$cloudbase
-export async function login1(params) {
+//自定义登录 云函数"createTicket" 
+export async function  login(params){  
+  console.log('api.login.params:',params)
   
-  console.log('login params:',params) 
-  //微信登陆
-  const auth =that.$cloudbase.auth()
-  // 1. 建议登录前先判断当前是否已经登录
-  //const loginState = auth.getLoginState();
-  const loginState = auth.signInAnonymously();
-  //const loginState = await auth.signInAnonymously();
-  // 匿名登录成功检测登录状态isAnonymous字段为true
-  console.log('cloundBase.index.loginState:',loginState); // true
-  if(!loginState){
-    // 以匿名登录为例
-    const loginState =  auth.anonymousAuthProvider(
-      { persistence: "local" }
-      )      
-      .signIn()
-    localStorage.setItem("hasLogin", true);
-    console.log('cloundBase.index.loginState:',loginState); // true
-    return loginState
-    
+  const ticket = await app.callFunction({
+    // 云函数名称
+    name: "createTicket",
+    // 传给云函数的参数
+    data:{
+      user: params.user
+      ,password: params.password
+    } 
+  })
+  .then(res => {
+    //console.log(res); // 输出 "3"
+    console.log('api.login:',res)
+    return res
+  })
+  .catch(error=>{
+    console.log('api.login.error:',error)
+  })
+  
+  console.log('api.login.ticket:',ticket)
+  if (!tichet){
+    return 
   }
-}  
-  
+  // 3. 登录 Cloudbase
+  //await auth.signInWithTicket(ticket);    
+  return await  app.auth({
+      persistence: "session"   
+    })
+    .customAuthProvider()
+    .signIn(ticket)
+    .then((res) => {
+      console.log('api.login.customAuth.res:',res)
+      // 登录成功
+    })
+    .catch(err => {
+      // 登录失败
+      console.log('api.login.customAuth.err:',err)
+  });
+}
+
+
+export async function init() {
+  // 使用匿名登录
+  auth = await app.auth().anonymousAuthProvider().signIn();
+
+  // 使用 refreshToken 的前 6 位作为 uid
+  //setUid(auth.hasLoginState().credential.refreshToken.slice(0, 6));
+  const uid = app.auth().hasLoginState().credential.refreshToken.slice(0, 6);
+  localStorage.setItem("uid", uid);
+  /**
+  // 建立实时数据推送连接
+  await db
+    .collection("messages")
+    .where({})
+    .watch({
+      onChange(snapshot) {
+        setList(snapshot.docs);
+        setLoading(false);
+      },
+      onError(err) {
+        console.log(err);
+      },
+    });
+   */
+}

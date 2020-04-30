@@ -57,7 +57,7 @@
             end-placeholder="结束日期"
             :picker-options="pickerOptions">
           </el-date-picker>
-        <!--  带快捷键的起止日期valueDate:{{valueDate}} -->
+           起止日期valueDate:{{valueDate}} 
           <el-button type="text" @click="clearAllCondition">撤销全部检索条件</el-button>
         </el-form-item>
 <!--- 
@@ -141,9 +141,7 @@
       <!--el-form ref="form" :model="form" label-width="60px" style="width:560px"-->
       <el-form ref="form" :model="form" >
         <el-form-item label="标题" >
-          <div class="mavonEditor">
             <el-input v-model="form.toDo.title" placeholder="新建事项"></el-input>
-          </div>
         </el-form-item>
         <el-form-item label="时间" >
             <el-select v-model="form.toDo.type" placeholder="选择时间类型">
@@ -208,29 +206,33 @@
 </template>
 
 <script>
-import { getList,getListByFunc,delObjByFunc,addObjByFunc,setObj,addObj} from "@/api/api.js";
 
-import { login0 } from "@/api/login.js";
+import { getList,addObj,setObj} from "@/api/api.js";
+import { getListByFunc,delObjByFunc,addObjByFunc,setObjByFunc} from "@/api/cloudFunc.js";
 
-import { randomString } from '@/utils/index'
+//import { init,login0,login } from "@/api/api.js";
+import { randomString,getDate } from '@/utils/index'
 import { deleteDataHandle } from '@/common/common.js'
 
+
 //2002-4-22
+/** 
 import Vue from "vue"
 import Cloudbase from "@cloudbase/vue-provider"
 
 Vue.use(Cloudbase, {
     env: "tianshibot-test"
 })
+*/
 
 export default {
   data() {
     return {
       //search bar
-      status:""  //状态
+      status:"收集箱"  //状态
       ,searchTime:[]  //起止时间
       ,dateTime:""    //起止
-      ,valueDate: ''  //带快捷起止日期
+      ,valueDate: []  //带快捷起止日期
       ,valueMonth: '' //带快捷起止月
       //日期快捷
       , pickerOptions: {
@@ -328,7 +330,7 @@ export default {
   },
   async created() {
     
-    
+    /**
      //微信登陆
     const auth =this.$cloudbase.auth()
     // 1. 建议登录前先判断当前是否已经登录
@@ -348,18 +350,19 @@ export default {
       //this.$router.push(this.redirect)  
      
     }
-    
-    //login0();
+     */
+    login0();  //index.js:144 tcb实例只存在一个auth对象  2020-4-29 移入api的tcb建立db和aurh 4-30 移入login登录页
+    //init()   //2020-4-29 聊天室demo
     
   },
   mounted: function() {
-    console.log('mounted')
+    //console.log('mounted')
     this.searchData();
    },
   methods: {
     clearAllCondition(){
       this.status="";
-      this.valueDate="";
+      this.valueDate=[];
       this.valueMonth="";
       this.dateTime="";
       this.searchTime="";
@@ -375,12 +378,14 @@ export default {
 
       var that = this;
       var param = {}
-      if  (that.status) {
-        param.status = that.status;
+      if(that.status){
+        param['toDo.status']=that.status
       }
-      if  (that.valueDate) {
-        param.date =  that.valueDate;
+      if(that.valueDate.length>0){
+        param['date']= that.valueDate
       }
+      
+      
       //getList("toDoList",param)
       getListByFunc("toDoList",param)
       .then(
@@ -388,13 +393,17 @@ export default {
           this.tableData = res
           this.refereshData();
           
-          console.log("searchData res:", res);
+          console.log("view.toDoList.searchData res:", res);
           
         },
         err => {
-          console.log("searchData err :", err);
+          console.log("view.toDoList.searchData err :", err);
         }
       );
+      
+      
+      
+      
     }
     //markdown 
     ,$save(e){
@@ -443,7 +452,7 @@ export default {
       }
     }
     //关闭编辑窗口
-    , handleClose(done) { 
+    ,handleClose(done) { 
         //没有维护数据，可以不需要提醒，直接关闭 2020-4-22 by tjob
         let that = this;
         //console.log('handleClose.form',that.form)
@@ -508,14 +517,19 @@ export default {
       //console.log('updateNews.obj:',obj)
 
       const toDo = this.form.toDo
-      setObj(this.form._id,toDo)
+      setObjByFunc(this.form._id,toDo)
       .then(
         res => {
           console.log("updateNews res:", res);
-          this.clearForm()
-          this.dialogFormVisible = false
+          if(res.stats.updated){
+            this.$message("更新成功~");  //没有更新也是成功 { stats: { updated: 0 }, errMsg: 'collection.update:ok' } 
+            this.searchData();
+            this.clearForm()
+            this.dialogFormVisible = false
+          }else{
+            this.$message("数据没有变化，或者有故障。请取消退出~");  
+          }
           
-          this.searchData();
         },
         err => {
           console.log("updateNews err :", err);
