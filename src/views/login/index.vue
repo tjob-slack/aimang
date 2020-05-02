@@ -63,9 +63,9 @@
 </template>
 
 <script>
-import md5 from "js-md5";
-import { login,login1 } from "@/api/test.js";
-//import { login,login5 } from "@/api/api.js";
+//import md5 from "js-md5";
+//import { login,login1 } from "@/api/test.js";   //aimang login
+import { login,login3,login0,login_request } from "@/api/login.js";   //tianshi login
 
 export default {
   name: "Login",
@@ -143,18 +143,25 @@ export default {
           password: that.loginForm.password
       };
 
-      console.log('this.setData',data)
+      console.log('view.login.handleLogin.data',data)
 
       
-      login(data)
+      //login(data)  //fetch
+      login_request(data)  //request
       .then(
         res=>{
           console.log("view.login.res:", res);
+          console.log(this.redirect)
+          
+       
+          //this.$router.push(`/login?redirect=${this.$route.fullPath}`)
+          this.$router.push(this.redirect)  
         },
         err=>{
           console.log("view.login.err:", err);
         }
       )
+      
     }
   }
 };

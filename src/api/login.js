@@ -1,3 +1,4 @@
+import request from '@/utils/request'
 import { parseTime,randomString } from '@/utils/index'
 
 /**
@@ -7,15 +8,13 @@ import { parseTime,randomString } from '@/utils/index'
  */
 // 使用 Web 端 SDK
 const tcb = require('tcb-js-sdk')  //cloudbase
-console.log('api.api.tcb:',tcb)
+console.log('api.login.tcb:',tcb)
 const app = tcb.init({ 
   /* 初始化... */ 
   env: "tianshibot-test"
-  ,_openid: 'ozVib5W5yhvFrhOaMQpScujkaR2U' //cloud.getWXContext(context).OPENIDI
+  
 })
-
-
-
+console.log('api.login.app,after init:',app)
 
 const COL_NAME = 'toDoList'
 
@@ -28,6 +27,32 @@ console.log('api.now:',now)
 
 const date = parseTime(new Date(),'YYYY-MM-DD')
 console.log('api.date:',date)
+
+//来自聊天室demo
+export async function init() {
+  // 使用匿名登录
+  auth = await app.auth().anonymousAuthProvider().signIn();
+
+  // 使用 refreshToken 的前 6 位作为 uid
+  //setUid(auth.hasLoginState().credential.refreshToken.slice(0, 6));
+  const uid = app.auth().hasLoginState().credential.refreshToken.slice(0, 6);
+  localStorage.setItem("uid", uid);
+  /**
+  // 建立实时数据推送连接
+  await db
+    .collection("messages")
+    .where({})
+    .watch({
+      onChange(snapshot) {
+        setList(snapshot.docs);
+        setLoading(false);
+      },
+      onError(err) {
+        console.log(err);
+      },
+    });
+   */
+}
 
 export function login5(params) {
   console.log('login params:',params) 
@@ -43,8 +68,6 @@ export function login5(params) {
     res => {
       console.log('login.res:',res)
       if (res.data.token) {
-        localStorage.setItem("hasLogin", true);
-        localStorage.setItem("AMtoken", res.data.token);
         //localStorage.setItem("userInfo", JSON.stringify(res.data.userInfo));
         return res.data
       }
@@ -216,10 +239,11 @@ export async function login0(){
 }
 
 
-//自定义登录 云函数"createTicket" 
+//自定义登录 云函数"createTicket"  fetch方法
 export async function  login(params){  
   console.log('api.login.params:',params)
-  
+  //2020-5-1 尚未auth鉴权，不能使用云函数。 之前使用是用的匿名 改用fetch
+  /** 
   const ticket = await app.callFunction({
     // 云函数名称
     name: "createTicket",
@@ -237,13 +261,49 @@ export async function  login(params){
   .catch(error=>{
     console.log('api.login.error:',error)
   })
+  */
+
+  //fetch 出现Access-Control-Allow-Origin 跨域问题  设置腾讯云web安全域名
+  
+  const ticket =  await fetch('https://tianshibot-test.service.tcloudbase.com/createTicket'
+      
+  , {  
+        method: 'POST',
+        //credentials: 'include',
+        headers: {
+          'Content-Type': 'application/json;charset=UTF-8'
+        },
+        body: JSON.stringify({user: '1234254574'})
+        
+      }
+    )
+    .then((response) => {
+      // 这里拿到的 response 并不是一个 {name: 'test', age: 1} 对象
+      console.log('ticket response ：',response);
+        //return response.json();  // 将 response.body 通过 JSON.parse 转换为 JS 对象
+        if (response.ok) {
+          console.log('fetch response ok',response.json());
+          
+          return json.parse(response);
+        } else {
+          console.log('fetch response error',response.json());
+          
+        }
+      })
+      
+      .catch((err) => {
+        console.log('api.login.catch.error:',err);
+      });
+    
+   
   
   console.log('api.login.ticket:',ticket)
-  if (!tichet){
+  if (!ticket){
     return 
   }
   // 3. 登录 Cloudbase
   //await auth.signInWithTicket(ticket);    
+    
   return await  app.auth({
       persistence: "session"   
     })
@@ -259,28 +319,66 @@ export async function  login(params){
   });
 }
 
+//自定义登录 云函数"createTicket" 使用VUE axios的 request
+export async function login_request(params) {
+  console.log('login params:',params) 
+  const auth = app.auth() //2020-5-1 login中处理
+  console.log("login.auth:",auth)
 
-export async function init() {
-  // 使用匿名登录
-  auth = await app.auth().anonymousAuthProvider().signIn();
+  const loginState = await auth.getLoginState();
+  console.log("login.loginState:",loginState)
 
-  // 使用 refreshToken 的前 6 位作为 uid
-  //setUid(auth.hasLoginState().credential.refreshToken.slice(0, 6));
-  const uid = app.auth().hasLoginState().credential.refreshToken.slice(0, 6);
-  localStorage.setItem("uid", uid);
-  /**
-  // 建立实时数据推送连接
-  await db
-    .collection("messages")
-    .where({})
-    .watch({
-      onChange(snapshot) {
-        setList(snapshot.docs);
-        setLoading(false);
-      },
-      onError(err) {
-        console.log(err);
-      },
+  // 1. 建议登录前检查当前是否已经登录
+  if(loginState){
+
+    localStorage.setItem("hasLogin", true);
+    localStorage.setItem("accessToken", loginState.credential.accessToken);
+    localStorage.setItem("refreshToken", loginState.credential.refreshToken);
+    return   
+  }else{ 
+  
+    const ticket =  await request({
+      url: 'https://tianshibot-test.service.tcloudbase.com/createTicket',
+      method: 'post',
+      data:{
+        //requestId:randomString(false, 30)
+        //,timestamp: Date.parse(new Date())
+        user: params.user
+        ,password: params.password
+      }
+      
+    }).then(
+      res => {
+        console.log('login.ticket.res:',res)
+        return res.data
+        
+      }
+    )
+    console.log('login.ticket:',ticket)
+
+    // 3. 登录 Cloudbase
+    //const a = await auth.signInWithTicket(ticket);    
+    //return await  app.auth({  //2020-5-2 await  报错
+    const a = await auth
+    //({
+    //  persistence: "session"   
+    //})
+    .customAuthProvider()
+    .signIn(ticket)
+    .then((res) => {
+      // 登录成功
+      console.log('api.login.customAuth.res:',res)
+      localStorage.setItem("hasLogin", true);
+      localStorage.setItem("accessToken", res.credential.accessToken);
+      localStorage.setItem("refreshToken", res.credential.refreshToken);
+      
+    })
+    .catch(err => {
+      // 登录失败
+      console.log('api.login.customAuth.err:',err)
     });
-   */
+    
+    return a
+  }//if(!loginState)
+  
 }
