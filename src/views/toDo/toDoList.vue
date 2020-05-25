@@ -7,14 +7,17 @@
 			<el-form ref="tableForm" :inline="true">
 				<el-form-item label="订单状态" label-width="100"   >
           <el-radio-group  v-model="status" @change="statusChange">
+            <el-radio  label="全部">全部</el-radio>
+            <el-radio  label="无">无</el-radio>
             <el-radio  label="收集箱">收集箱</el-radio>
             <el-radio  label="整理架">整理架</el-radio>
             <el-radio  label="操作台">操作台</el-radio>
             <el-radio  label="果子筐">果子筐</el-radio>
           </el-radio-group>
 				</el-form-item>
-			</el-form>
+<!--			</el-form>
       <el-form ref="tableForm" :inline="true">
+-->
 				<el-form-item label="查询日期" label-width="100">
 <!----       
 					<el-date-picker
@@ -57,7 +60,7 @@
             end-placeholder="结束日期"
             :picker-options="pickerOptions">
           </el-date-picker>
-           起止日期valueDate:{{valueDate}} 
+           <!--起止日期valueDate:{{valueDate}}  -->
           <el-button type="text" @click="clearAllCondition">撤销全部检索条件</el-button>
         </el-form-item>
 <!--- 
@@ -84,13 +87,15 @@
 		</div>
     		<!-- 数据表格容器 -->
 		<div id="tableOperatorContainer" class="table-operator-container">
-      <el-table ref="multipleTable" :data="tableDataCurrent" style="width: 100%" @selection-change="handleSelectionChange">
+      <el-table  
+        v-loading="loading"
+        ref="multipleTable" :data="tableDataCurrent" style="width: 100%" @selection-change="handleSelectionChange">
         
         <el-table-column type="selection" width="55">  </el-table-column>  
         <el-table-column prop="_id" label="ID" v-if="null"></el-table-column>
         <el-table-column prop="date" label="时间" width="100"></el-table-column>
         <el-table-column prop="toDo.type" label="类型" width="100"></el-table-column>
-        <el-table-column prop="toDo.title" label="标题" width="180" show-overflow-tooltip></el-table-column>
+        <el-table-column prop="toDo.title" label="标题" show-overflow-tooltip></el-table-column>
         <el-table-column prop="toDo.content" label="内容" show-overflow-tooltip ></el-table-column>
         
         <el-table-column prop="toDo.status" label="状态"  width="100"></el-table-column>
@@ -137,7 +142,7 @@
   <!----page end--->
 <!-- Form -->
   <div class="root">      
-    <el-dialog title="发布新闻消息" :visible.sync="dialogFormVisible" :before-close="handleClose" >
+    <el-dialog title="行动起来" :visible.sync="dialogFormVisible" :before-close="handleClose" >
       <!--el-form ref="form" :model="form" label-width="60px" style="width:560px"-->
       <el-form ref="form" :model="form" >
         <el-form-item label="标题" >
@@ -207,7 +212,7 @@
 
 <script>
 
-import { getList,addObj,setObj} from "@/api/api.js";
+import { getList,getList1,addObj,setObj} from "@/api/api.js";
 import { getListByFunc,delObjByFunc,addObjByFunc,setObjByFunc} from "@/api/cloudFunc.js";
 
 //import { init,login0,login } from "@/api/api.js";
@@ -229,14 +234,40 @@ export default {
   data() {
     return {
       //search bar
-      status:"收集箱"  //状态
+      status:"无"  //状态
       ,searchTime:[]  //起止时间
       ,dateTime:""    //起止
       ,valueDate: []  //带快捷起止日期
       ,valueMonth: '' //带快捷起止月
       //日期快捷
       , pickerOptions: {
-          shortcuts: [{
+          shortcuts: [
+          {
+            text: "最近一天",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 1);
+              picker.$emit("pick", [start, end]);
+            }
+          },{
+            text: "最近三天",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 3);
+              picker.$emit("pick", [start, end]);
+            }
+          },
+            {
+            text: "最近五天",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 5);
+              picker.$emit("pick", [start, end]);
+            }
+          },{
             text: '最近一周',
             onClick(picker) {
               const end = new Date();
@@ -275,11 +306,12 @@ export default {
       form: {
           _id:''
           ,toDo:{
-            title: ''
-            ,type: ''
-            ,status:""
-            ,content: ''
-            ,picUrl: []
+            title   :''
+            ,type   :''
+            ,status :''
+            ,content:''
+            ,picUrl :[]
+            ,space  :''
             //,fileExtendName: ""
           }
           
@@ -325,7 +357,7 @@ export default {
         subfield: true, // 单双栏模式
         preview: true, // 预览
       }
-      
+      ,loading: true //数据加载状态 2020-5-19
     };
   },
   async created() {
@@ -351,7 +383,7 @@ export default {
      
     }
      */
-    login0();  //index.js:144 tcb实例只存在一个auth对象  2020-4-29 移入api的tcb建立db和aurh 4-30 移入login登录页
+    //login0();  //index.js:144 tcb实例只存在一个auth对象  2020-4-29 移入api的tcb建立db和aurh 4-30 移入login登录页
     //init()   //2020-4-29 聊天室demo
     
   },
@@ -371,6 +403,10 @@ export default {
     ,statusChange(){
        //切换订单状态
       console.log('statusChange',this.status)
+      this.currentPage=1;
+      this.form.toDo.status=this.status;
+      console.log('this.form.toDo.status',this.form.toDo.status)
+      
       this.searchData();
     }  
     // 网络请求统一处理
@@ -386,17 +422,22 @@ export default {
       }
       
       
-      //getList("toDoList",param)
+      //getList1("toDoList",param)  //watch
       getListByFunc("toDoList",param)
       .then(
         res => {
           this.tableData = res
           this.refereshData();
-          
-          console.log("view.toDoList.searchData res:", res);
+          this.loading = false;
+          //console.log("view.toDoList.searchData res:", res);
           
         },
         err => {
+           this.$message({
+            message: err,
+            type:'error'
+          });
+          this.loading = false;
           console.log("view.toDoList.searchData err :", err);
         }
       );
@@ -485,6 +526,7 @@ export default {
     //发布
     ,addNews(){
       ///addObj(this.form.toDo)
+      
       addObjByFunc(this.form.toDo)
       .then(
         res => {
@@ -522,7 +564,7 @@ export default {
         res => {
           console.log("updateNews res:", res);
           if(res.stats.updated){
-            this.$message("更新成功~");  //没有更新也是成功 { stats: { updated: 0 }, errMsg: 'collection.update:ok' } 
+            this.$message({message:"更新成功~",type: 'success'});  //没有更新也是成功 { stats: { updated: 0 }, errMsg: 'collection.update:ok' } 
             this.searchData();
             this.clearForm()
             this.dialogFormVisible = false
