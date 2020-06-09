@@ -5,7 +5,8 @@
   		<!-- 查询条件 -->
 		<div id="operatorForm" class="operator-form">
 			<el-form ref="tableForm" :inline="true">
-				<el-form-item label="订单状态" label-width="100"   >
+				<el-form-item label="状态" >
+          <!--
           <el-radio-group  v-model="status" @change="statusChange">
             <el-radio  label="全部">全部</el-radio>
             <el-radio  label="无">无</el-radio>
@@ -14,7 +15,29 @@
             <el-radio  label="操作台">操作台</el-radio>
             <el-radio  label="果子筐">果子筐</el-radio>
           </el-radio-group>
+          -->
+          <el-select v-model="status" filterable clearable  placeholder="选择空间状态" @change="statusChange">
+             <el-option
+              v-for="item in statusOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value">
+            </el-option>
+          </el-select>
+
 				</el-form-item>
+
+        <el-form-item label="项目" >
+          <el-select v-model="space" filterable clearable placeholder="选择项目空间" @change="spaceChange">
+            <el-option
+              v-for="item in spaceOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value">
+            </el-option>
+          </el-select>
+				</el-form-item>
+
 <!--			</el-form>
       <el-form ref="tableForm" :inline="true">
 -->
@@ -50,8 +73,8 @@
           
           <el-date-picker
             v-model="valueDate"
-            format= 'yyyy/MM/dd'
-						value-format="yyyy/MM/dd"
+            format= 'yyyy-MM-dd'
+						value-format="yyyy-MM-dd"
             type="daterange"
             align="right"
             unlink-panels
@@ -61,7 +84,7 @@
             :picker-options="pickerOptions">
           </el-date-picker>
            <!--起止日期valueDate:{{valueDate}}  -->
-          <el-button type="text" @click="clearAllCondition">撤销全部检索条件</el-button>
+          <!--el-button  type="text" @click="clearAllCondition">撤销全部检索条件</el-button -->
         </el-form-item>
 <!--- 
         <el-form-item>
@@ -134,8 +157,23 @@
       >
         批量删除({{multipleSelection.length}})
       </el-button>
+      <!--批量移动-->
+      
+      <el-select v-model="spaceMove" filterable placeholder="批量移动到" 
+      @change="moveSpace(multipleSelection)"
+      v-if="multipleSelection.length>0" 
+      >
+        <el-option
+          v-for="item in spaceOptions"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value">
+        </el-option>
+      </el-select>
     
-      <el-button size="mini" @click="createNew" >新增</el-button>
+
+      
+      <!--el-button size="mini" @click="createNew" >新增</el-button-->
       <el-button type="text" @click="createNew">发布一条新的</el-button>
     </div>
    </div>
@@ -148,7 +186,7 @@
         <el-form-item label="标题" >
             <el-input v-model="form.toDo.title" placeholder="新建事项"></el-input>
         </el-form-item>
-        <el-form-item label="时间" >
+        <el-form-item label="时间类型" >
             <el-select v-model="form.toDo.type" placeholder="选择时间类型">
               <el-option value="年计划">年计划</el-option>
               <el-option value="月计划">月计划</el-option>
@@ -156,15 +194,110 @@
               <el-option value="日计划">日计划</el-option>
             </el-select>
         </el-form-item>  
+        <el-form-item label="计划时间" >
+          <el-date-picker 
+            v-model="form.toDo.plannedTime"
+            type="date"
+            placeholder="选择日期"
+            :picker-options="dateOptions">
+          </el-date-picker>
+        </el-form-item>
+        <el-form-item label="实际时间" >
+          <el-date-picker 
+            v-model="form.toDo.actualTime"
+            type="date"
+            placeholder="选择日期"
+            :picker-options="dateOptions">
+          </el-date-picker>
+        </el-form-item>
+        <!--提醒时间 2020-6-8-->
+        <el-form-item label="提醒" >
+          <el-switch  v-model="form.alert"  active-color="#13ce66"  @change="handleAlert"></el-switch>
+          <el-checkbox v-if="form.alert" v-model="form.fullDay">全天</el-checkbox>
+          <el-checkbox v-if="form.alert" v-model="form.enableEndDate">结束时间</el-checkbox>
+          <el-checkbox v-if="form.alert" v-model="form.Lunar">农历</el-checkbox>
+        </el-form-item>  
+          
+        <el-form-item label="提醒时间" v-if="form.alert && !form.enableEndDate && form.fullDay" >
+          <el-date-picker 
+            v-model="form.toDo.alertTime"
+            type="date"
+            placeholder="选择日期"
+            :picker-options="dateOptions">
+          </el-date-picker>
+        </el-form-item>
+         
+          
+        <el-form-item label="提醒时间" v-if="form.alert && !form.enableEndDate && !form.fullDay" >
+          <el-date-picker 
+            v-model="form.toDo.alertTime"
+            type="datetime"
+            placeholder="选择日期时间"
+            :picker-options="timeOptions">
+          </el-date-picker>
+        </el-form-item>
+        
+        <el-form-item label="提醒时间" v-if="form.alert && form.enableEndDate && form.fullDay">  
+          <el-date-picker 
+            v-model="form.toDo.alertTime"
+            format= 'yyyy-MM-dd'
+						value-format="yyyy-MM-dd"
+            type="daterange"
+            align="right"
+            unlink-panels
+            range-separator="至"
+            start-placeholder="开始日期"
+            end-placeholder="结束日期"
+            :picker-options="pickerOptions">
+          </el-date-picker>
+        </el-form-item> 
+
+        <el-form-item label="提醒时间" v-if="form.alert && form.enableEndDate && !form.fullDay">  
+          <el-date-picker 
+            v-model="form.toDo.alertTime"
+            
+            type="datetimerange"
+            align="right"
+            unlink-panels
+            range-separator="至"
+            start-placeholder="开始时间"
+            end-placeholder="结束时间"
+            :picker-options="pickerOptions">
+          </el-date-picker>
+        </el-form-item> 
+        <el-input-number v-model="form.toDo.alertNum" @change="handleChange" :min="1" :max="60" label="提前"></el-input-number>  
+          <el-select v-model="form.toDo.alertType" placeholder="">
+            <el-option value="月">月</el-option>
+            <el-option value="周">周</el-option>
+            <el-option value="天">天</el-option>
+            <el-option value="小时">小时</el-option>
+            <el-option value="分钟">分钟</el-option>
+            <el-option value="秒">秒</el-option>
+            
+          </el-select>
+          后
+
+        <!--项目-->
         <el-form-item label="空间" >
-          <el-select v-model="form.toDo.status" placeholder="选择空间状态">
-            <el-option value="收集箱">收集箱</el-option>
-            <el-option value="整理架">整理架</el-option>
-            <el-option value="操作台">操作台</el-option>
-            <el-option value="果子筐">果子筐</el-option>
+          <el-select v-model="form.toDo.status" filterable clearable  placeholder="选择空间状态">
+            <el-option
+              v-for="item in statusOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value">
+            </el-option>
           </el-select>
         </el-form-item>  
-            
+        <el-form-item label="项目" >
+          <el-select v-model="form.toDo.space" filterable clearable placeholder="选择项目空间" >
+            <el-option
+              v-for="item in spaceOptions"
+              :key="item.value"
+              :label="item.label"
+              :value="item.value">
+            </el-option>
+          </el-select>
+				</el-form-item>    
         <!--el-form-item label="正文">
           <el-input  type="textarea"  :rows="8"  placeholder="请输入正文"  v-model="form.content"></el-input>
         </el-form-item-->
@@ -234,12 +367,134 @@ export default {
   data() {
     return {
       //search bar
-      status:"无"  //状态
+      spaceOptions: [{
+        },
+      ],
+      space:'',
+      spaceMove:'',
+      statusOptions: [
+        {value: '无', label: '无'},
+        {value: '收集箱', label: '收集箱'},
+        {value: '整理架', label: '整理架'},
+        {value: '操作台', label: '操作台'},
+        {value: '果子筐', label: '果子筐'},
+        {value: 'CSM', label: 'CSM'},
+      ],
+      
+      status:""  //状态
       ,searchTime:[]  //起止时间
       ,dateTime:""    //起止
       ,valueDate: []  //带快捷起止日期
       ,valueMonth: '' //带快捷起止月
+      //时间快捷
+      , timeOptions:{
+        shortcuts: [{
+            text: '现在',
+            onClick(picker) {
+              picker.$emit('pick', new Date());
+            }
+          }, {
+            text: '一天后',
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() + 3600 * 1000 * 24 * 1);
+              picker.$emit('pick', date);
+            }
+          }, {
+            text: '三天后',
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() + 3600 * 1000 * 24 * 3);
+              picker.$emit('pick', date);
+            }
+          }, {
+            text: '一周后',
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() + 3600 * 1000 * 24 * 7);
+              picker.$emit('pick', date);
+            }
+          }, {
+            text: '1小时后',
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() + 3600 * 1000 * 1 );
+              picker.$emit('pick', date);
+            }
+          }, {
+            text: '2小时后',
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() + 3600 * 1000 * 2 );
+              picker.$emit('pick', date);
+            }
+          }, {
+            text: '3小时后',
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() + 3600 * 1000 * 3 );
+              picker.$emit('pick', date);
+            }
+          }, {
+            text: '5分钟后',
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() + 60 * 1000 * 5 );
+              picker.$emit('pick', date);
+            }
+          }, {
+            text: '10分钟后',
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() + 60 * 1000 * 10 );
+              picker.$emit('pick', date);
+            }
+          }, {
+            text: '30分钟后',
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() + 60 * 1000 * 30 );
+              picker.$emit('pick', date);
+            }
+          }]
+      }
       //日期快捷
+      , dateOptions:{
+        shortcuts: [{
+            text: '同一天',
+            onClick(picker) {
+              picker.$emit('pick', new Date());
+            }
+          }, {
+            text: '提前一天',
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() - 3600 * 1000 * 24 * 1);
+              picker.$emit('pick', date);
+            }
+          }, {
+            text: '提前三天',
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() - 3600 * 1000 * 24 * 3);
+              picker.$emit('pick', date);
+            }
+          }, {
+            text: '提前一周',
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() - 3600 * 1000 * 24 * 7);
+              picker.$emit('pick', date);
+            }
+          }, {
+            text: '提前一月',
+            onClick(picker) {
+              const date = new Date();
+              date.setTime(date.getTime() - 3600 * 1000 * 24 * 30);
+              picker.$emit('pick', date);
+            }
+          }]
+      }
       , pickerOptions: {
           shortcuts: [
           {
@@ -306,16 +561,23 @@ export default {
       form: {
           _id:''
           ,toDo:{
-            title   :''
-            ,type   :''
-            ,status :''
-            ,content:''
-            ,picUrl :[]
-            ,space  :''
+            title   : ''
+            ,type   : ''
+            ,status : ''
+            ,content: ''
+            ,picUrl : []
+            ,space  : ''
+            ,alertTime : {}
             //,fileExtendName: ""
           }
-          
+          ,alert : false
+          ,fullDay : false
+          ,enableEndDate : false
+          ,Lunar : false
+
       },
+      
+      
       formLabelWidth: '120px'
       //add form end
       ,imgUrl: ""
@@ -389,6 +651,25 @@ export default {
   },
   mounted: function() {
     //console.log('mounted')
+    var param={}
+    getListByFunc("spaceList",param)
+    .then(
+      res => {
+
+        this.spaceOptions = res.map(item => {
+          return { value: `${item.space.name}`, label: `${item.space.name}` };
+        })
+        ;
+        console.log('spaceOptions:',this.spaceOptions)
+      },
+      err => {
+        this.$message({
+          message: err,
+          type:'error'
+        });
+      }
+    );
+    
     this.searchData();
    },
   methods: {
@@ -409,6 +690,15 @@ export default {
       
       this.searchData();
     }  
+    ,spaceChange(){
+      console.log('spaceChange',this.space)
+      this.currentPage=1;
+      this.form.toDo.space=this.space;
+      console.log('this.form.toDo.status',this.form.toDo.status)
+      
+      this.searchData();
+    }  
+    
     // 网络请求统一处理
     ,searchData(){
 
@@ -419,6 +709,9 @@ export default {
       }
       if(that.valueDate.length>0){
         param['date']= that.valueDate
+      }
+      if(that.space){
+        param['toDo.space']=that.space
       }
       
       
@@ -487,9 +780,13 @@ export default {
             ,content: ''
             ,picUrl: []
             //,fileExtendName: ""
+            ,alertTime:[]
             
           }
-          
+          ,alert : false
+          ,fullDay : false
+          ,enableEndDate : false
+          ,Lunar : false
       }
     }
     //关闭编辑窗口
@@ -520,6 +817,7 @@ export default {
     ,createNew(){
       let that = this;
       //that.form_actual = Object.assign({},that.form);
+      that.form.fullDay = true;
       that.dialogFormVisible = true;
       
     }
@@ -550,6 +848,10 @@ export default {
       //console.log('editNews.scopeRow.toDo:',scopeRow.toDo)
       //that.form_actual = Object.assign(scopeRow);
       that.form= Object.assign(scopeRow);
+      that.form.alert = scopeRow.toDo.alertTime ? true : false
+      //that.form.fullDay = false
+      //that.form.enableEndDate = false
+      
       that.dialogFormVisible = true;
       
     }
@@ -601,6 +903,28 @@ export default {
             }
         );
     },
+    //删除
+    moveSpace(obj) {
+        console.log('deleteData.obj:',obj)
+        const whereDictList = []
+        obj.forEach(obj => {
+          whereDictList.push({_id:obj._id});
+        }); 
+        const fieldList = {
+          'toDO.space' : spaceMove
+        }
+        updateObjsByFunc(whereDictList,fieldList)
+        .then(
+            res => {
+            console.log("moveSpace.res :", res);
+            this.searchData();
+            this.$message("处理成功~");
+            },
+            err => {
+            console.log("moveSpace.err :", err);
+            }
+        );
+    },
     //page
     handleSizeChange(val) {
       this.pagesize=val
@@ -637,6 +961,12 @@ export default {
     ,handleSelectionChange(val) {
       //console.log('handleSelectionChange:',val)
       this.multipleSelection = val;
+    }
+    //提醒
+    ,handleAlert(){
+      if (this.form.alert) {
+        this.form.toDo.alertTime = new Date()
+      }
     }
 }
 };
