@@ -28,7 +28,7 @@
 				</el-form-item>
 
         <el-form-item label="项目" >
-          <el-select v-model="space" filterable clearable placeholder="选择项目空间" @change="spaceChange">
+          <el-select v-model="space" filterable clearable placeholder="选择项目空间" @change="spaceChange" @focus="spaceFocus">
             <el-option
               v-for="item in spaceOptions"
               :key="item.value"
@@ -186,7 +186,7 @@
         <el-form-item label="标题" >
             <el-input v-model="form.toDo.title" placeholder="新建事项"></el-input>
         </el-form-item>
-        <el-form-item label="时间类型" >
+        <el-form-item label="周期" >
             <el-select v-model="form.toDo.type" placeholder="选择时间类型">
               <el-option value="年计划">年计划</el-option>
               <el-option value="月计划">月计划</el-option>
@@ -194,33 +194,27 @@
               <el-option value="日计划">日计划</el-option>
             </el-select>
         </el-form-item>  
-        <el-form-item label="计划时间" >
-          <el-date-picker 
-            v-model="form.toDo.plannedTime"
-            type="date"
-            placeholder="选择日期"
-            :picker-options="dateOptions">
-          </el-date-picker>
-        </el-form-item>
-        <el-form-item label="实际时间" >
-          <el-date-picker 
-            v-model="form.toDo.actualTime"
-            type="date"
-            placeholder="选择日期"
-            :picker-options="dateOptions">
-          </el-date-picker>
-        </el-form-item>
-        <!--提醒时间 2020-6-8-->
-        <el-form-item label="提醒" >
-          <el-switch  v-model="form.alert"  active-color="#13ce66"  @change="handleAlert"></el-switch>
-          <el-checkbox v-if="form.alert" v-model="form.fullDay">全天</el-checkbox>
-          <el-checkbox v-if="form.alert" v-model="form.enableEndDate">结束时间</el-checkbox>
-          <el-checkbox v-if="form.alert" v-model="form.Lunar">农历</el-checkbox>
-        </el-form-item>  
+        <el-form-item label="时间" >
+          <el-select v-model="form.timeType" placeholder="选择时间类型" width="55">
+            <el-option value="计划">计划</el-option>
+            <el-option value="实际">实际</el-option>
+          </el-select>   
           
-        <el-form-item label="提醒时间" v-if="form.alert && !form.enableEndDate && form.fullDay" >
-          <el-date-picker 
-            v-model="form.toDo.alertTime"
+          <el-date-picker  @change="handleTimeType"
+            v-model="form.toDoTime"
+            :type="form.pickerType"
+            placeholder="选择日期"
+            :picker-options="timeOptions">
+          </el-date-picker>
+          
+          <el-checkbox v-model="form.fullDay" @change="handleTimeFormat">全天</el-checkbox>
+          <el-checkbox v-model="form.enableEndDate"  @change="handleTimeFormat">结束时间</el-checkbox>
+          <el-checkbox v-model="form.Lunar"  @change="handleTimeFormat">农历</el-checkbox>
+        </el-form-item> 
+<!-- 精简
+        <el-form-item label="提醒时间" v-if="!form.enableEndDate && form.fullDay" >
+          <el-date-picker  @change="handleTimeType"
+            v-model="form.toDoTime"
             type="date"
             placeholder="选择日期"
             :picker-options="dateOptions">
@@ -228,18 +222,18 @@
         </el-form-item>
          
           
-        <el-form-item label="提醒时间" v-if="form.alert && !form.enableEndDate && !form.fullDay" >
+        <el-form-item label="提醒时间" v-if="!form.enableEndDate && !form.fullDay" >
           <el-date-picker 
-            v-model="form.toDo.alertTime"
+            v-model="form.toDoTime"
             type="datetime"
             placeholder="选择日期时间"
             :picker-options="timeOptions">
           </el-date-picker>
         </el-form-item>
         
-        <el-form-item label="提醒时间" v-if="form.alert && form.enableEndDate && form.fullDay">  
+        <el-form-item label="提醒时间" v-if="form.enableEndDate && form.fullDay">  
           <el-date-picker 
-            v-model="form.toDo.alertTime"
+            v-model="form.toDoTime"
             format= 'yyyy-MM-dd'
 						value-format="yyyy-MM-dd"
             type="daterange"
@@ -252,9 +246,9 @@
           </el-date-picker>
         </el-form-item> 
 
-        <el-form-item label="提醒时间" v-if="form.alert && form.enableEndDate && !form.fullDay">  
+        <el-form-item label="提醒时间" v-if="form.enableEndDate && !form.fullDay">  
           <el-date-picker 
-            v-model="form.toDo.alertTime"
+            v-model="form.toDoTime"
             
             type="datetimerange"
             align="right"
@@ -264,19 +258,31 @@
             end-placeholder="结束时间"
             :picker-options="pickerOptions">
           </el-date-picker>
-        </el-form-item> 
-        <el-input-number v-model="form.toDo.alertNum" @change="handleChange" :min="1" :max="60" label="提前"></el-input-number>  
-          <el-select v-model="form.toDo.alertType" placeholder="">
-            <el-option value="月">月</el-option>
-            <el-option value="周">周</el-option>
-            <el-option value="天">天</el-option>
-            <el-option value="小时">小时</el-option>
-            <el-option value="分钟">分钟</el-option>
-            <el-option value="秒">秒</el-option>
-            
-          </el-select>
-          后
+        </el-form-item>
+--->
+        <!--提醒时间 2020-6-8-->
+        <el-form-item label="提醒" >
+          <el-switch  v-model="form.alert"  active-color="#13ce66"  @change="handleAlert"></el-switch>
+          
+            <el-date-picker :disabled="!form.alert"
+              v-model="form.toDo.alertTime"
+              type="datetime"
+              placeholder="选择日期时间"
+              :picker-options="dateOptions">
+            </el-date-picker>
 
+            <el-input-number  v-model="form.toDo.alertNum" @change="handleAlertTime" :min="1" :max="60" label="提前"></el-input-number>  
+            <el-select v-model="form.toDo.alertType" placeholder="" @change="handleAlertTime">
+              <el-option value="月">月</el-option>
+              <el-option value="周">周</el-option>
+              <el-option value="天">天</el-option>
+              <el-option value="小时">小时</el-option>
+              <el-option value="分钟">分钟</el-option>
+              <el-option value="秒">秒</el-option>    
+            </el-select>
+            后
+          
+        </el-form-item>
         <!--项目-->
         <el-form-item label="空间" >
           <el-select v-model="form.toDo.status" filterable clearable  placeholder="选择空间状态">
@@ -346,7 +352,7 @@
 <script>
 
 import { getList,getList1,addObj,setObj} from "@/api/api.js";
-import { getListByFunc,delObjByFunc,addObjByFunc,setObjByFunc} from "@/api/cloudFunc.js";
+import { getListByFunc,delObjByFunc,addObjByFunc,setObjByFunc,updateObjsByFunc} from "@/api/cloudFunc.js";
 
 //import { init,login0,login } from "@/api/api.js";
 import { randomString,getDate } from '@/utils/index'
@@ -651,24 +657,7 @@ export default {
   },
   mounted: function() {
     //console.log('mounted')
-    var param={}
-    getListByFunc("spaceList",param)
-    .then(
-      res => {
-
-        this.spaceOptions = res.map(item => {
-          return { value: `${item.space.name}`, label: `${item.space.name}` };
-        })
-        ;
-        console.log('spaceOptions:',this.spaceOptions)
-      },
-      err => {
-        this.$message({
-          message: err,
-          type:'error'
-        });
-      }
-    );
+    
     
     this.searchData();
    },
@@ -690,6 +679,26 @@ export default {
       
       this.searchData();
     }  
+    ,spaceFocus(){
+      var param={}
+      getListByFunc("spaceList",param)
+      .then(
+        res => {
+
+          this.spaceOptions = res.map(item => {
+            return { value: `${item.space.name}`, label: `${item.space.name}` };
+          })
+          ;
+          console.log('spaceOptions:',this.spaceOptions)
+        },
+        err => {
+          this.$message({
+            message: err,
+            type:'error'
+          });
+        }
+      );
+    }
     ,spaceChange(){
       console.log('spaceChange',this.space)
       this.currentPage=1;
@@ -962,10 +971,65 @@ export default {
       //console.log('handleSelectionChange:',val)
       this.multipleSelection = val;
     }
-    //提醒
+    //计划时间或实际时间
+    ,handleTimeType(){
+      if (this.form.timeType){
+        this.form.toDo.plannedTime = this.form.toDoTime;
+      }else{
+        this.form.toDo.actualTime = this.form.toDoTime;
+      }
+    }
+    //时间格式： time，起止    农历
+    ,handleTimeFormat(){
+      if (!form.enableEndDate && form.fullDay){
+        this.form.pickerType = 'date';
+      }else{
+        this.form.pickerType = 'datetime';;
+      }
+    }
+    //是否提醒
     ,handleAlert(){
       if (this.form.alert) {
-        this.form.toDo.alertTime = new Date()
+        this.form.toDo.alertTime = this.form.toDoTime ? this.form.toDoTime : new Date();
+      }
+    }
+    //提醒提前num和type
+    ,handleAlertTime(){
+      console.log('toDoList.handleAlertTime.alertNum:',this.form.toDo.alertNum)
+      console.log('toDoList.handleAlertTime.alertType:',this.form.toDo.alertType)
+      console.log('toDoList.handleAlertTime.alertTime:',this.form.toDo.alertTime)
+      const date = this.form.toDoTime ? this.form.toDoTime : new Date();
+      if (this.form.toDo.alertNum && this.form.toDo.alertType) {
+        
+        
+        switch ( this.form.toDo.alertType ) {
+        case "月":
+          date.setTime(date.getTime() + 3600 * 1000 * 24 * 30 * this.form.toDo.alertNum);
+          this.form.toDo.alertTime = date;
+          break;
+        case "周":
+          date.setTime(date.getTime() + 3600 * 1000 * 24 * 7 * this.form.toDo.alertNum);
+          this.form.toDo.alertTime = date;
+          break;
+        case "天":
+          date.setTime(date.getTime() + 3600 * 1000 * 24 * 1 * this.form.toDo.alertNum);
+          this.form.toDo.alertTime = date;
+          break;
+        case "小时":
+          date.setTime(date.getTime() + 3600 * 1000 * this.form.toDo.alertNum);
+          this.form.toDo.alertTime = date;
+          break;
+        case "分钟":
+          date.setTime(date.getTime() + 60 * 1000 * this.form.toDo.alertNum);
+          this.form.toDo.alertTime = date;
+          break;
+        case "秒":
+          date.setTime(date.getTime() + 1 * 1000 * this.form.toDo.alertNum);
+          this.form.toDo.alertTime = date;
+          break;
+        default:
+          console.log("default");
+        }
       }
     }
 }
