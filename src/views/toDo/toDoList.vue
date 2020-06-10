@@ -6,17 +6,7 @@
 		<div id="operatorForm" class="operator-form">
 			<el-form ref="tableForm" :inline="true">
 				<el-form-item label="状态" >
-          <!--
-          <el-radio-group  v-model="status" @change="statusChange">
-            <el-radio  label="全部">全部</el-radio>
-            <el-radio  label="无">无</el-radio>
-            <el-radio  label="收集箱">收集箱</el-radio>
-            <el-radio  label="整理架">整理架</el-radio>
-            <el-radio  label="操作台">操作台</el-radio>
-            <el-radio  label="果子筐">果子筐</el-radio>
-          </el-radio-group>
-          -->
-          <el-select v-model="status" filterable clearable  placeholder="选择空间状态" @change="statusChange">
+          <el-select v-model="status" filterable clearable  placeholder="选择状态" @change="statusChange" @focus="statusFocus">
              <el-option
               v-for="item in statusOptions"
               :key="item.value"
@@ -28,7 +18,7 @@
 				</el-form-item>
 
         <el-form-item label="项目" >
-          <el-select v-model="space" filterable clearable placeholder="选择项目空间" @change="spaceChange" @focus="spaceFocus">
+          <el-select v-model="space" filterable clearable placeholder="选择项目" @change="spaceChange" @focus="spaceFocus">
             <el-option
               v-for="item in spaceOptions"
               :key="item.value"
@@ -102,8 +92,11 @@
           </el-date-picker>
           带快捷键的起止月份valueMonth: {{valueMonth}}
 				</el-form-item>
---->
-				<el-form-item>
+--->  
+				<el-form-item label="搜索" >
+            <el-input v-model="searchStr" clearable placeholder="输入关键字搜索"></el-input>
+        </el-form-item>
+        <el-form-item>
 					<el-button @click="searchData" size="small" class="line-item" type="success">检索</el-button>
 				</el-form-item>
 			</el-form>
@@ -117,7 +110,7 @@
         <el-table-column type="selection" width="55">  </el-table-column>  
         <el-table-column prop="_id" label="ID" v-if="null"></el-table-column>
         <el-table-column prop="date" label="时间" width="100"></el-table-column>
-        <el-table-column prop="toDo.type" label="类型" width="100"></el-table-column>
+        <el-table-column prop="toDo.space" label="项目" width="100"></el-table-column>
         <el-table-column prop="toDo.title" label="标题" show-overflow-tooltip></el-table-column>
         <el-table-column prop="toDo.content" label="内容" show-overflow-tooltip ></el-table-column>
         
@@ -159,8 +152,22 @@
       </el-button>
       <!--批量移动-->
       
-      <el-select v-model="spaceMove" filterable placeholder="批量移动到" 
-      @change="moveSpace(multipleSelection)"
+      <el-select v-model="statusMove" filterable placeholder="修改状态为"
+      @change="batchMove(multipleSelection)"
+      @focus="statusFocus"
+      v-if="multipleSelection.length>0" 
+      >
+        <el-option
+          v-for="item in statusOptions"
+          :key="item.value"
+          :label="item.label"
+          :value="item.value">
+        </el-option>
+      </el-select>
+    
+      <el-select v-model="spaceMove" filterable placeholder="移动到项目" 
+      @change="batchMove(multipleSelection)"
+      @focus="spaceFocus"
       v-if="multipleSelection.length>0" 
       >
         <el-option
@@ -171,7 +178,6 @@
         </el-option>
       </el-select>
     
-
       
       <!--el-button size="mini" @click="createNew" >新增</el-button-->
       <el-button type="text" @click="createNew">发布一条新的</el-button>
@@ -186,7 +192,10 @@
         <el-form-item label="标题" >
             <el-input v-model="form.toDo.title" placeholder="新建事项"></el-input>
         </el-form-item>
-        <el-form-item label="周期" >
+
+        <el-switch  v-model="form.advance"  active-color="#13ce66"  ></el-switch>
+
+        <el-form-item label="周期" v-if="form.advance">
             <el-select v-model="form.toDo.type" placeholder="选择时间类型">
               <el-option value="年计划">年计划</el-option>
               <el-option value="月计划">月计划</el-option>
@@ -194,7 +203,7 @@
               <el-option value="日计划">日计划</el-option>
             </el-select>
         </el-form-item>  
-        <el-form-item label="时间" >
+        <el-form-item label="时间" v-if="form.advance">
           <el-select v-model="form.timeType" placeholder="选择时间类型" width="55">
             <el-option value="计划">计划</el-option>
             <el-option value="实际">实际</el-option>
@@ -261,31 +270,32 @@
         </el-form-item>
 --->
         <!--提醒时间 2020-6-8-->
-        <el-form-item label="提醒" >
+        <el-form-item label="提醒" v-if="form.advance">
           <el-switch  v-model="form.alert"  active-color="#13ce66"  @change="handleAlert"></el-switch>
           
-            <el-date-picker :disabled="!form.alert"
+            <el-date-picker v-if="form.alert" 
               v-model="form.toDo.alertTime"
               type="datetime"
               placeholder="选择日期时间"
               :picker-options="dateOptions">
             </el-date-picker>
 
-            <el-input-number  v-model="form.toDo.alertNum" @change="handleAlertTime" :min="1" :max="60" label="提前"></el-input-number>  
-            <el-select v-model="form.toDo.alertType" placeholder="" @change="handleAlertTime">
+            <el-input-number v-if="form.alert" v-model="form.toDo.alertNum" @change="handleAlertTime" :min="1" :max="60" label="提前"></el-input-number>  
+            <el-select v-if="form.alert" v-model="form.toDo.alertType" placeholder="" @change="handleAlertTime">
               <el-option value="月">月</el-option>
               <el-option value="周">周</el-option>
               <el-option value="天">天</el-option>
               <el-option value="小时">小时</el-option>
               <el-option value="分钟">分钟</el-option>
-              <el-option value="秒">秒</el-option>    
+              <el-option value="秒">秒</el-option>  
+              后  
             </el-select>
-            后
+            
           
         </el-form-item>
         <!--项目-->
-        <el-form-item label="空间" >
-          <el-select v-model="form.toDo.status" filterable clearable  placeholder="选择空间状态">
+        <el-form-item label="状态" v-if="form.advance">
+          <el-select v-model="form.toDo.status" filterable clearable  placeholder="选择状态" @focus="statusFocus">
             <el-option
               v-for="item in statusOptions"
               :key="item.value"
@@ -294,8 +304,8 @@
             </el-option>
           </el-select>
         </el-form-item>  
-        <el-form-item label="项目" >
-          <el-select v-model="form.toDo.space" filterable clearable placeholder="选择项目空间" >
+        <el-form-item label="项目" v-if="form.advance">
+          <el-select v-model="form.toDo.space" filterable clearable placeholder="选择项目" @focus="spaceFocus">
             <el-option
               v-for="item in spaceOptions"
               :key="item.value"
@@ -309,7 +319,7 @@
         </el-form-item-->
 
         <!--2020-4-16 基于Vue的markdown编辑器-->
-        <el-form-item label="内容">
+        <el-form-item label="内容" v-if="form.advance">
               <!--mavon-editor v-model="value"/-->
             <div class="mavonEditor">
               <!--no-ssr-->
@@ -373,11 +383,14 @@ export default {
   data() {
     return {
       //search bar
-      spaceOptions: [{
-        },
-      ],
       space:'',
       spaceMove:'',
+      spaceOptions: [
+        {},
+      ],
+      
+      status:"",  //状态
+      statusMove:'',
       statusOptions: [
         {value: '无', label: '无'},
         {value: '收集箱', label: '收集箱'},
@@ -385,12 +398,11 @@ export default {
         {value: '操作台', label: '操作台'},
         {value: '果子筐', label: '果子筐'},
         {value: 'CSM', label: 'CSM'},
-      ],
+      ]
       
-      status:""  //状态
       ,searchTime:[]  //起止时间
       ,dateTime:""    //起止
-      ,valueDate: []  //带快捷起止日期
+      ,valueDate: ''  //带快捷起止日期
       ,valueMonth: '' //带快捷起止月
       //时间快捷
       , timeOptions:{
@@ -573,14 +585,19 @@ export default {
             ,content: ''
             ,picUrl : []
             ,space  : ''
-            ,alertTime : {}
+            ,alertTime : ''
             //,fileExtendName: ""
+            ,plannedTime:''
+            ,actulaTime:''
           }
+          ,advance : false  //复杂选项 2020-6-10
           ,alert : false
           ,fullDay : false
           ,enableEndDate : false
           ,Lunar : false
-
+          ,alertNum:0
+          ,alertType:''
+          ,toDoTime:''
       },
       
       
@@ -626,6 +643,7 @@ export default {
         preview: true, // 预览
       }
       ,loading: true //数据加载状态 2020-5-19
+      ,searchStr : '' //2020-6-10
     };
   },
   async created() {
@@ -664,7 +682,7 @@ export default {
   methods: {
     clearAllCondition(){
       this.status="";
-      this.valueDate=[];
+      this.valueDate='';
       this.valueMonth="";
       this.dateTime="";
       this.searchTime="";
@@ -678,9 +696,29 @@ export default {
       console.log('this.form.toDo.status',this.form.toDo.status)
       
       this.searchData();
-    }  
+    } 
+    ,statusFocus(){
+      var param={COL_NAME : 'statusList' }
+      getListByFunc("spaceList",param)
+      .then(
+        res => {
+
+          this.statusOptions = res.map(item => {
+            return { value: `${item.status.name}`, label: `${item.status.name}` };
+          })
+          ;
+          console.log('statusOptions:',this.statusOptions)
+        },
+        err => {
+          this.$message({
+            message: err,
+            type:'error'
+          });
+        }
+      );
+    } 
     ,spaceFocus(){
-      var param={}
+      var param={COL_NAME : 'spaceList' }
       getListByFunc("spaceList",param)
       .then(
         res => {
@@ -722,13 +760,19 @@ export default {
       if(that.space){
         param['toDo.space']=that.space
       }
+      //增加文本检索 2020-6-10
+      if(that.searchStr){
+        param['toDo.title']=that.searchStr
+      }
       
-      
+      console.log('toDoList.searchStr:',that.searchStr)
+
       //getList1("toDoList",param)  //watch
       getListByFunc("toDoList",param)
       .then(
         res => {
           this.tableData = res
+          //this.currentPage=1;
           this.refereshData();
           this.loading = false;
           //console.log("view.toDoList.searchData res:", res);
@@ -789,7 +833,7 @@ export default {
             ,content: ''
             ,picUrl: []
             //,fileExtendName: ""
-            ,alertTime:[]
+            ,alertTime: ''
             
           }
           ,alert : false
@@ -912,25 +956,30 @@ export default {
             }
         );
     },
-    //删除
-    moveSpace(obj) {
-        console.log('deleteData.obj:',obj)
+    //批量修改
+    batchMove(obj) {
+        console.log('batchMove.obj:',obj)
         const whereDictList = []
         obj.forEach(obj => {
           whereDictList.push({_id:obj._id});
         }); 
-        const fieldList = {
-          'toDO.space' : spaceMove
+        const data = {}
+        if (this.statusMove){
+          data['toDo.status']=this.statusMove;
         }
-        updateObjsByFunc(whereDictList,fieldList)
+        if (this.spaceMove){
+          data['toDo.space']=this.spaceMove;
+        }
+        
+        updateObjsByFunc(whereDictList,data)
         .then(
             res => {
-            console.log("moveSpace.res :", res);
+            console.log("batchMove.res :", res);
             this.searchData();
             this.$message("处理成功~");
             },
             err => {
-            console.log("moveSpace.err :", err);
+            console.log("batchMove.err :", err);
             }
         );
     },
@@ -981,7 +1030,7 @@ export default {
     }
     //时间格式： time，起止    农历
     ,handleTimeFormat(){
-      if (!form.enableEndDate && form.fullDay){
+      if (!this.form.enableEndDate && this.form.fullDay){
         this.form.pickerType = 'date';
       }else{
         this.form.pickerType = 'datetime';;
@@ -989,42 +1038,43 @@ export default {
     }
     //是否提醒
     ,handleAlert(){
+      console.log('handleAlert',this.form.alert)
       if (this.form.alert) {
         this.form.toDo.alertTime = this.form.toDoTime ? this.form.toDoTime : new Date();
       }
     }
     //提醒提前num和type
     ,handleAlertTime(){
-      console.log('toDoList.handleAlertTime.alertNum:',this.form.toDo.alertNum)
-      console.log('toDoList.handleAlertTime.alertType:',this.form.toDo.alertType)
+      console.log('toDoList.handleAlertTime.alertNum:',this.form.alertNum)
+      console.log('toDoList.handleAlertTime.alertType:',this.form.alertType)
       console.log('toDoList.handleAlertTime.alertTime:',this.form.toDo.alertTime)
       const date = this.form.toDoTime ? this.form.toDoTime : new Date();
-      if (this.form.toDo.alertNum && this.form.toDo.alertType) {
+      if (this.form.alertNum && this.form.alertType) {
         
         
-        switch ( this.form.toDo.alertType ) {
+        switch ( this.form.alertType ) {
         case "月":
-          date.setTime(date.getTime() + 3600 * 1000 * 24 * 30 * this.form.toDo.alertNum);
+          date.setTime(date.getTime() + 3600 * 1000 * 24 * 30 * this.form.alertNum);
           this.form.toDo.alertTime = date;
           break;
         case "周":
-          date.setTime(date.getTime() + 3600 * 1000 * 24 * 7 * this.form.toDo.alertNum);
+          date.setTime(date.getTime() + 3600 * 1000 * 24 * 7 * this.form.alertNum);
           this.form.toDo.alertTime = date;
           break;
         case "天":
-          date.setTime(date.getTime() + 3600 * 1000 * 24 * 1 * this.form.toDo.alertNum);
+          date.setTime(date.getTime() + 3600 * 1000 * 24 * 1 * this.form.alertNum);
           this.form.toDo.alertTime = date;
           break;
         case "小时":
-          date.setTime(date.getTime() + 3600 * 1000 * this.form.toDo.alertNum);
+          date.setTime(date.getTime() + 3600 * 1000 * this.form.alertNum);
           this.form.toDo.alertTime = date;
           break;
         case "分钟":
-          date.setTime(date.getTime() + 60 * 1000 * this.form.toDo.alertNum);
+          date.setTime(date.getTime() + 60 * 1000 * this.form.alertNum);
           this.form.toDo.alertTime = date;
           break;
         case "秒":
-          date.setTime(date.getTime() + 1 * 1000 * this.form.toDo.alertNum);
+          date.setTime(date.getTime() + 1 * 1000 * this.form.alertNum);
           this.form.toDo.alertTime = date;
           break;
         default:
