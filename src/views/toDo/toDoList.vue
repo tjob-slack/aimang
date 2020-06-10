@@ -63,15 +63,14 @@
           
           <el-date-picker
             v-model="valueDate"
-            format= 'yyyy-MM-dd'
-						value-format="yyyy-MM-dd"
             type="daterange"
             align="right"
             unlink-panels
             range-separator="至"
             start-placeholder="开始日期"
             end-placeholder="结束日期"
-            :picker-options="pickerOptions">
+            :picker-options="pickerOptions"
+            :default-time="['00:00:00', '23:59:59']">>
           </el-date-picker>
            <!--起止日期valueDate:{{valueDate}}  -->
           <!--el-button  type="text" @click="clearAllCondition">撤销全部检索条件</el-button -->
@@ -389,7 +388,7 @@ export default {
         {},
       ],
       
-      status:"",  //状态
+      status:"操作台",  //状态
       statusMove:'',
       statusOptions: [
         {value: '无', label: '无'},
@@ -401,9 +400,9 @@ export default {
       ]
       
       ,searchTime:[]  //起止时间
-      ,dateTime:""    //起止
-      ,valueDate: ''  //带快捷起止日期
-      ,valueMonth: '' //带快捷起止月
+      ,dateTime:[]    //起止
+      ,valueDate: []  //带快捷起止日期
+      ,valueMonth: [] //带快捷起止月
       //时间快捷
       , timeOptions:{
         shortcuts: [{
@@ -515,8 +514,63 @@ export default {
       }
       , pickerOptions: {
           shortcuts: [
+            {
+            text: "一年内",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              end.setTime(end.getTime() + 3600 * 1000 * 24 * 365);
+              picker.$emit("pick", [start, end]);
+            }
+          },
           {
-            text: "最近一天",
+            text: "一月内",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              end.setTime(end.getTime() + 3600 * 1000 * 24 * 30);
+              picker.$emit("pick", [start, end]);
+            }
+          },
+          {
+            text: "一周内",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              end.setTime(end.getTime() + 3600 * 1000 * 24 * 7);
+              picker.$emit("pick", [start, end]);
+            }
+          },
+          {
+            text: "三天内",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              end.setTime(end.getTime() + 3600 * 1000 * 24 * 3);
+              picker.$emit("pick", [start, end]);
+            }
+          },
+            
+          {
+            text: "一天内",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              end.setTime(end.getTime() + 3600 * 1000 * 24 * 1);
+              picker.$emit("pick", [start, end]);
+            }
+          },
+          {
+            text: "今天",
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              
+              picker.$emit("pick", [start, end]);
+            }
+          },
+          {
+            text: "一天前",
             onClick(picker) {
               const end = new Date();
               const start = new Date();
@@ -524,24 +578,15 @@ export default {
               picker.$emit("pick", [start, end]);
             }
           },{
-            text: "最近三天",
+            text: "三天前",
             onClick(picker) {
               const end = new Date();
               const start = new Date();
               start.setTime(start.getTime() - 3600 * 1000 * 24 * 3);
               picker.$emit("pick", [start, end]);
             }
-          },
-            {
-            text: "最近五天",
-            onClick(picker) {
-              const end = new Date();
-              const start = new Date();
-              start.setTime(start.getTime() - 3600 * 1000 * 24 * 5);
-              picker.$emit("pick", [start, end]);
-            }
           },{
-            text: '最近一周',
+            text: '一周前',
             onClick(picker) {
               const end = new Date();
               const start = new Date();
@@ -549,7 +594,7 @@ export default {
               picker.$emit('pick', [start, end]);
             }
           }, {
-            text: '最近一个月',
+            text: '一个月前',
             onClick(picker) {
               const end = new Date();
               const start = new Date();
@@ -557,11 +602,19 @@ export default {
               picker.$emit('pick', [start, end]);
             }
           }, {
-            text: '最近三个月',
+            text: '一个季度前',
             onClick(picker) {
               const end = new Date();
               const start = new Date();
               start.setTime(start.getTime() - 3600 * 1000 * 24 * 90);
+              picker.$emit('pick', [start, end]);
+            }
+          }, {
+            text: '一年前',
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setTime(start.getTime() - 3600 * 1000 * 24 * 365);
               picker.$emit('pick', [start, end]);
             }
           }]
@@ -975,7 +1028,11 @@ export default {
         .then(
             res => {
             console.log("batchMove.res :", res);
+            this.spaceMove='';
+            this.statusMove='';
+            
             this.searchData();
+            
             this.$message("处理成功~");
             },
             err => {
