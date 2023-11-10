@@ -17,7 +17,7 @@
   "dependencies": {
     "@cloudbase/vue-provider": "^0.1.0",
     "@form-create/element-ui": "^1.0.9",
-    "axios": "0.18.1",
+    "axios": "1.6.0",
     "element-ui": "2.12.0",
     "form-create": "^1.6.6",
     "iview": "^3.5.4",
